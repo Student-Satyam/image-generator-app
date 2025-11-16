@@ -1,1 +1,3 @@
-streamlit, huggingface_hub,Pillow
+streamlit
+huggingface_hub
+Pillow
