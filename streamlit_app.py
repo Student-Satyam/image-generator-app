@@ -14,7 +14,7 @@ except KeyError:
 client = InferenceClient(model="stabilityai/stable-diffusion-xl-base-1.0", token=HF_API_TOKEN)
 
 # Set the title of the Streamlit app
-st.title("Text-to-Image with Stable Diffusion XL")
+st.title("Text-to-Image with Stable Diffusion XL by Satyam")
 
 # Create a text input field for the user to enter their image prompt
 prompt = st.text_input("Enter your image prompt:", "3D cute robot reading a book")
