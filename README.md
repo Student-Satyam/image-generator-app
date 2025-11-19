@@ -1,78 +1,34 @@
+Streamlit Text-to-Image Generator (CPU Edition)
 
-# Text-to-Image Generator with Streamlit and Hugging Face
+This repository contains a simple Streamlit application for generating images from text prompts using the Stable Diffusion v1.5 model.
 
-This application is a simple web interface built with Streamlit that allows users to generate images from text prompts using the Hugging Face Inference API with a Stable Diffusion XL model.
+Crucial Note on Deployment (Streamlit Cloud Free Tier):
+This application is designed to use the powerful runwayml/stable-diffusion-v1-5 model entirely on the CPU. While this avoids costly GPU requirements, the model is very large (~5GB) and requires significant computational resources.
 
-## Features
+Expected Performance:
 
-*   **Text-to-Image Generation:** Input a text prompt and get an AI-generated image.
-*   **Hugging Face Integration:** Utilizes `stabilityai/stable-diffusion-xl-base-1.0` model via the Hugging Face Inference API.
-*   **Secure API Key Handling:** Loads Hugging Face API token securely from Streamlit secrets.
+Local Machine (Modern CPU/Decent RAM): Generation time is typically 1-3 minutes.
 
-## Setup and Deployment
+Streamlit Cloud (Free Tier): Generation is highly unstable. It will likely take 5+ minutes, often exceeding memory limits and timing out. This is a demonstration of how to configure the files, but it is not recommended for production use on free cloud hosting.
 
-Follow these steps to set up and deploy your application.
+Requirements
 
-### 1. Get Your Hugging Face API Token
+The requirements.txt file lists all necessary Python libraries. These will be automatically installed by Streamlit Cloud during deployment.
 
-Before running the application, you'll need a Hugging Face API token.
+How to Deploy on Streamlit Cloud
 
-1.  Go to [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
-2.  Generate a new token with at least **"Read"** access.
-3.  Keep this token secure; you will need it for deployment.
+Repository Setup: Create a new GitHub repository and upload these three files: streamlit_app.py, requirements.txt, and README.md.
 
-### 2. Prepare Your GitHub Repository
+Streamlit Cloud: Go to your Streamlit Cloud dashboard and click "New app."
 
-1.  **Create a New GitHub Repository:**
-    *   Go to [github.com/new](https://github.com/new).
-    *   Give your repository a name (e.g., `streamlit-image-generator`).
-    *   Choose whether it's public or private.
-    *   Initialize with a `README.md` (optional, but good practice).
+Link Repository: Select your newly created repository and choose the main branch.
 
-2.  **Add Application Files:**
-    *   Create a file named `streamlit_app.py` in the root of your repository and paste the Streamlit application code into it.
-    *   Create a file named `requirements.txt` in the root of your repository.
+File Path: Ensure the "Main file path" is set to streamlit_app.py.
 
-    **`streamlit_app.py` content:**
-    ```python
-    import streamlit as st
-    from huggingface_hub import InferenceClient
-    from PIL import Image
-    
-    # Securely load the Hugging Face API token from Streamlit secrets
-    try:
-        HF_API_TOKEN = st.secrets["HF_API_TOKEN"]
-    except KeyError:
-        st.error("HF_API_TOKEN not found in Streamlit secrets. Please add it to your Streamlit secrets file.")
-        st.stop()
-    
-    # Initialize the Hugging Face Inference Client
-    client = InferenceClient(model="stabilityai/stable-diffusion-xl-base-1.0", token=HF_API_TOKEN)
-    
-    # Set the title of the Streamlit app
-    st.title("Text-to-Image with Stable Diffusion XL")
-    
-    # Create a text input field for the user to enter their image prompt
-    prompt = st.text_input("Enter your image prompt:", "3D cute robot reading a book")
-    
-    # Create a button for generating the image
-    if st.button("Generate Image"):
-        if prompt:
-            with st.spinner('Generating image...'):
-                try:
-                    # Generate the image
-                    img = client.text_to_image(prompt=prompt)
-                    # Display the generated image
-                    st.image(img, caption="Generated Image", use_column_width=True)
-                except Exception as e:
-                    st.error(f"Error generating image: {e}")
-        else:
-            st.warning("Please enter a prompt to generate an image.")
-    ```
+Deploy: Click "Deploy!" and wait for the application to build. (The build process may take a long time as it downloads the large model weights.)
 
-    **`requirements.txt` content:**
-    ```
-    streamlit
-    huggingface_hub
-    Pillow
-    
+Configuration in streamlit_app.py
+
+Caching: The @st.cache_resource decorator ensures the large model is loaded only once when the application starts, improving efficiency after the initial load.
+
+CPU Mode: The line pipe.to("cpu") explicitly tells the PyTorch/Diffusers library to use the CPU, which is mandatory on the free Streamlit Cloud tier.
