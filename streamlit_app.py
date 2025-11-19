@@ -1,53 +1,33 @@
 import streamlit as st
-from diffusers import StableDiffusionPipeline
-import torch
+from huggingface_hub import InferenceClient
+from PIL import Image
 
-st.title("Free Text-to-Image Generator (CPU Mode)")
-st.subheader("Using `runwayml/stable-diffusion-v1-5`")
+# Securely load the Hugging Face API token from Streamlit secrets
+try:
+    HF_API_TOKEN = st.secrets["HF_API_TOKEN"]
+except KeyError:
+    st.error("HF_API_TOKEN not found in Streamlit secrets. Please add it to your Streamlit secrets file.")
+    st.stop()
 
-# CRITICAL WARNING for free cloud deployment
-st.warning(
-    "⚠️ **Performance Warning for Streamlit Cloud (Free Tier):** "
-    "The Stable Diffusion v1.5 model is ~5GB and is running on CPU only. "
-    "Generation will be extremely slow (often 5+ minutes or may fail due to timeouts/memory limits)."
-    "For a better experience, consider using a much smaller model or a dedicated hosting service."
-)
+# Initialize the Hugging Face Inference Client
+client = InferenceClient(model="stabilityai/stable-diffusion-xl-base-1.0", token=HF_API_TOKEN)
 
-@st.cache_resource
-def load_model():
-    """Loads the Stable Diffusion pipeline and forces it onto the CPU."""
-    try:
-        # Load the model from Hugging Face
-        pipe = StableDiffusionPipeline.from_pretrained(
-            "runwayml/stable-diffusion-v1-5",
-            torch_dtype=torch.float32 # Use float32 for CPU compatibility
-        )
-        # Explicitly move to CPU
-        pipe = pipe.to("cpu")
-        st.success("Model loaded successfully (CPU mode).")
-        return pipe
-    except Exception as e:
-        st.error(f"Error loading model: {e}")
-        st.stop()
-        return None
+# Set the title of the Streamlit app
+st.title("Text-to-Image with Stable Diffusion XL")
 
-pipe = load_model()
+# Create a text input field for the user to enter their image prompt
+prompt = st.text_input("Enter your image prompt:", "3D cute robot reading a book")
 
-# User input for the prompt
-prompt = st.text_input(
-    "Enter your image prompt:",
-    "A vintage, 3D, cute robot reading a book in a cozy library, highly detailed, photorealistic."
-)
-
+# Create a button for generating the image
 if st.button("Generate Image"):
-    if pipe and prompt:
-        with st.spinner("⏳ Generating... This will take a long time on CPU (5 minutes or more on free cloud hosting)."):
+    if prompt:
+        with st.spinner('Generating image...'):
             try:
                 # Generate the image
-                image = pipe(prompt).images[0]
-                
-                # Display the results
-                st.image(image, caption="Generated Image", use_column_width=True)
-                st.balloons()
+                img = client.text_to_image(prompt=prompt)
+                # Display the generated image
+                st.image(img, caption="Generated Image", use_column_width=True)
             except Exception as e:
-                st.error(f"Image generation failed. This is often due to memory limits (OOM error) on free cloud tiers. Error: {e}")
+                st.error(f"Error generating image: {e}")
+    else:
+        st.warning("Please enter a prompt to generate an image.")
