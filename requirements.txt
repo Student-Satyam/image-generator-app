@@ -1,6 +1,3 @@
-streamlit
-diffusers
-torch
-transformers
-accelerate
-safetensors
+    streamlit
+    huggingface_hub
+    Pillow
